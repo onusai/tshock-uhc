@@ -73,57 +73,6 @@ namespace UHC
             TShockAPI.Commands.ChatCommands.Add(new Command(perm, handler, name) { HelpText = helptext });
         }
 
-        void CMDOnSetHP(CommandArgs args)
-        {
-            if (args.Parameters.Count != 2)
-            {
-                args.Player.SendErrorMessage("Usage: /sethp <amount> <player name>\nExample: /sethp 400 onusai\nExample: /sethp 300 \"corn stick\"");
-                return;
-            }
-
-            int amount = 0;
-            if (!int.TryParse(args.Parameters[0], out amount))
-            {
-                args.Player.SendErrorMessage(String.Format("Invalid HP amount: {0}", args.Parameters[0]));
-                return;
-            }
-            
-            if (config.PlayerHP.ContainsKey(args.Parameters[1]))
-            {
-                // in case you want to revive dead player
-                config.PlayerHP[args.Parameters[1]] = amount;
-            }
-
-            List<TSPlayer> players = TSPlayer.FindByNameOrID(args.Parameters[1]);
-            if (players.Count == 0)
-            {
-                args.Player.SendErrorMessage(String.Format("Unable to find player with username: {0}. Try surrounding the name in \"quotes\"", args.Parameters[1]));
-                return;
-            }
-
-            TSPlayer player = players[0];
-            SetHP(amount, player);
-        }
-
-        void OnPlayerHP(Object sender, GetDataHandlers.PlayerHPEventArgs e)
-        {
-            if (!e.Player.GetData<bool>("rdy")) return;
-
-            string name = e.Player.Name;
-            int uhp = config.PlayerHP[name];
-
-            if (e.Current > uhp)
-                SetHP(uhp, e.Player);
-            else
-                config.PlayerHP[name] = Math.Clamp(e.Current, 0, e.Player.TPlayer.statLifeMax);
-            
-        }
-
-        void OnPlayerDamage(Object sender, GetDataHandlers.PlayerDamageEventArgs e)
-        {
-            config.PlayerHP[e.Player.Name] -= Math.Clamp(e.Damage, 0, e.Player.TPlayer.statLifeMax);
-        }
-
         void OnPlayerPostLogin(PlayerPostLoginEventArgs e)
         {
             TSPlayer player = e.Player;
@@ -147,10 +96,25 @@ namespace UHC
             player.SetData<bool>("rdy", true);
         }
 
-        void OnWorldSave(WorldSaveEventArgs e)
+        void OnPlayerHP(Object sender, GetDataHandlers.PlayerHPEventArgs e)
         {
-            PluginConfig.Save(config);
+            if (!e.Player.GetData<bool>("rdy")) return;
+
+            string name = e.Player.Name;
+            int uhp = config.PlayerHP[name];
+
+            if (e.Current > uhp)
+                SetHP(uhp, e.Player);
+            else
+                config.PlayerHP[name] = Math.Clamp(e.Current, 0, e.Player.TPlayer.statLifeMax);
+            
         }
+
+        void OnPlayerDamage(Object sender, GetDataHandlers.PlayerDamageEventArgs e)
+        {
+            config.PlayerHP[e.Player.Name] -= Math.Clamp(e.Damage, 0, e.Player.TPlayer.statLifeMax);
+        }
+
 
         void SetHP(int hp, TSPlayer player)
         {
@@ -158,6 +122,43 @@ namespace UHC
             config.PlayerHP[player.Name] = hp;
             player.TPlayer.statLife = hp;
             NetMessage.SendData((int)PacketTypes.PlayerHp, -1, -1, null, player.TPlayer.whoAmI);
+        }
+
+        void CMDOnSetHP(CommandArgs args)
+        {
+            if (args.Parameters.Count != 2)
+            {
+                args.Player.SendErrorMessage("Usage: /sethp <amount> <player name>\nExample: /sethp 400 onusai\nExample: /sethp 300 \"corn stick\"");
+                return;
+            }
+
+            int amount = 0;
+            if (!int.TryParse(args.Parameters[0], out amount))
+            {
+                args.Player.SendErrorMessage(String.Format("Invalid HP amount: {0}", args.Parameters[0]));
+                return;
+            }
+
+            if (config.PlayerHP.ContainsKey(args.Parameters[1]))
+            {
+                // in case you want to revive dead player
+                config.PlayerHP[args.Parameters[1]] = amount;
+            }
+
+            List<TSPlayer> players = TSPlayer.FindByNameOrID(args.Parameters[1]);
+            if (players.Count == 0)
+            {
+                args.Player.SendErrorMessage(String.Format("Unable to find player with username: {0}. Try surrounding the name in \"quotes\"", args.Parameters[1]));
+                return;
+            }
+
+            TSPlayer player = players[0];
+            SetHP(amount, player);
+        }
+
+        void OnWorldSave(WorldSaveEventArgs e)
+        {
+            PluginConfig.Save(config);
         }
 
         public static class PluginConfig
