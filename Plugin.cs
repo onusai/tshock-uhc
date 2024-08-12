@@ -20,10 +20,15 @@ namespace UHC
         public override string Name => "UHC";
         public override Version Version => new Version(1, 0, 0, 0);
 
-
         public class ConfigData
         {
             public bool Enabled { get; set; } = true;
+
+            public Dictionary<int, int> HealingItems { get; set; } = new Dictionary<int, int>()
+            {
+                { 29, 50 },
+                { 3335, 600 }
+            };
             public Dictionary<string, int> PlayerHP { get; set; } = new Dictionary<string, int>();
         }
 
@@ -47,6 +52,7 @@ namespace UHC
             ServerApi.Hooks.WorldSave.Register(this, OnWorldSave);
             GetDataHandlers.PlayerDamage += OnPlayerDamage;
             GetDataHandlers.PlayerHP += OnPlayerHP;
+            GetDataHandlers.PlayerUpdate += OnPlayerUpdate;
 
             RegisterCommand("sethp", "tshock.admin", CMDOnSetHP, "Used to set UHC player hp\nUsage: /sethp <amount> <player name>\nExample: /sethp 400 onusai");
         }
@@ -63,6 +69,7 @@ namespace UHC
                     ServerApi.Hooks.WorldSave.Deregister(this, OnWorldSave);
                     GetDataHandlers.PlayerDamage -= OnPlayerDamage;
                     GetDataHandlers.PlayerHP -= OnPlayerHP;
+                    GetDataHandlers.PlayerUpdate -= OnPlayerUpdate;
                 }
             }
             base.Dispose(disposing);
@@ -159,6 +166,30 @@ namespace UHC
         void OnWorldSave(WorldSaveEventArgs e)
         {
             PluginConfig.Save(config);
+        }
+
+        void OnPlayerUpdate(object sender, GetDataHandlers.PlayerUpdateEventArgs e)
+        {
+            if (e.Control.IsUsingItem && !e.Player.TPlayer.controlUseItem)
+            {
+                Item item = e.Player.TPlayer.inventory[e.SelectedItem];
+
+                if (!config.HealingItems.ContainsKey(item.type)) return;
+
+                if (config.PlayerHP[e.Player.Name] == e.Player.TPlayer.statLifeMax) return;
+
+                int healAmount = config.HealingItems[item.type];
+
+                if (item.stack == 1)
+                    item = new Item();
+                else
+                    item.stack -= 1;
+
+                e.Player.TPlayer.inventory[e.SelectedItem] = item;
+                NetMessage.SendData((int)PacketTypes.PlayerSlot, e.PlayerId, -1, null, e.PlayerId, e.SelectedItem);
+
+                SetHP(config.PlayerHP[e.Player.Name] + healAmount, e.Player);
+            }
         }
 
         public static class PluginConfig
