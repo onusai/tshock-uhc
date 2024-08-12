@@ -6,8 +6,8 @@
 ### Setup
 * Server Side Characters (SSC) must be enabled in `tshock/sscconfig.json`
     - Using SSC will require players to register/login when they join in order to play
-    - This plugin will not work on players that are no logged in
-    - If you want players to start with more than 100hp, change the `StartingHealth` property in `tshock/sscconfig.json`
+    - This plugin will not work on players that are not logged in
+    - If you want players to start with more than 100 hp, change the `StartingHealth` property in `tshock/sscconfig.json`
     - Note that if the value is over 500, you will also need to edit `tshock/config.json` and set the `MaxHP` property to the same value or higher
 
 * Install the plugin and start tshock, this will generate the config file in `tshock/UHC.json`
