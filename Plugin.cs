@@ -16,7 +16,7 @@ namespace UHC
     {
 
         public override string Author => "Onusai";
-        public override string Description => "HP does not regenerate";
+        public override string Description => "Prevents players from regenerating HP";
         public override string Name => "UHC";
         public override Version Version => new Version(1, 0, 0, 0);
 
