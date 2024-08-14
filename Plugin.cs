@@ -34,8 +34,6 @@ namespace UHC
 
         ConfigData config;
 
-        Dictionary<string, int> PlayerForceHP { get; set; } = new Dictionary<string, int>();
-
         public UHC(Main game) : base(game) { }
 
         public override void Initialize()
