@@ -51,6 +51,7 @@ namespace UHC
             GetDataHandlers.PlayerDamage += OnPlayerDamage;
             GetDataHandlers.PlayerHP += OnPlayerHP;
             GetDataHandlers.PlayerUpdate += OnPlayerUpdate;
+            ServerApi.Hooks.GameUpdate.Register(this, OnGameUpdate);
 
             RegisterCommand("sethp", "tshock.admin", CMDOnSetHP, "Used to set UHC player hp\nUsage: /sethp <amount> <player name>\nExample: /sethp 400 onusai");
         }
@@ -68,6 +69,7 @@ namespace UHC
                     GetDataHandlers.PlayerDamage -= OnPlayerDamage;
                     GetDataHandlers.PlayerHP -= OnPlayerHP;
                     GetDataHandlers.PlayerUpdate -= OnPlayerUpdate;
+                    ServerApi.Hooks.GameUpdate.Deregister(this, OnGameUpdate);
                 }
             }
             base.Dispose(disposing);
@@ -78,7 +80,25 @@ namespace UHC
             TShockAPI.Commands.ChatCommands.Add(new Command(perm, handler, name) { HelpText = helptext });
         }
 
-        void OnPlayerPostLogin(PlayerPostLoginEventArgs e)
+        int ticksElapsed = 0;
+        void OnGameUpdate(EventArgs args)
+        {
+            if (ticksElapsed < 60)
+            {
+                ticksElapsed += 1;
+                return;
+            }
+            ticksElapsed = 0;
+
+            foreach (TSPlayer player in TShock.Players)
+            {
+                if (player == null || player.Dead) continue;
+
+                player.SetBuff(30, 60 * 3);
+            }
+        }
+
+            void OnPlayerPostLogin(PlayerPostLoginEventArgs e)
         {
             TSPlayer player = e.Player;
             if (player == null) return;
