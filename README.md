@@ -42,4 +42,4 @@
 
 ***
 
-[Download UHC.dll](https://github.com/onusai/tshock-uhc/raw/main/bin/Debug/net6.0/UHC.dll)
+[Download UHC.dll](https://github.com/onusai/tshock-uhc/raw/main/bin/Debug/net9.0/UHC.dll)
